@@ -260,3 +260,4 @@ os.environ['PATH'] = os.environ['PATH']+';'+os.environ['CONDA_PREFIX']+r"/Librar
 tree = export_graphviz(clf2.estimators_[0], out_file=None)
 graph = pydotplus.graph_from_dot_data(tree) 
 Image(graph.create_png())
+

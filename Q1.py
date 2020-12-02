@@ -172,4 +172,91 @@ better1_data = data.loc[data['location'].isin(names)]
 sns.lineplot(data=better1_data, x="date", y="new_cases_smoothed", hue="location")
 plt.legend(frameon=False, loc='upper left')
 sns.despine()
+# %% [markdown]
+# # Q5
 # %%
+data.columns
+# %%
+selected = data[['positive_rate','cardiovasc_death_rate','new_cases_smoothed_per_million','continent', 'location', 'date',
+       'total_cases_per_million', 
+       'total_deaths_per_million', 
+       'new_deaths_smoothed_per_million', 
+       'icu_patients_per_million', 'hosp_patients','hosp_patients_per_million',
+       'weekly_icu_admissions_per_million', 
+       'weekly_hosp_admissions_per_million',
+       'total_tests_per_thousand', 'new_tests_per_thousand',
+       'new_tests_smoothed_per_thousand',
+       'stringency_index',
+       'population', 'population_density', 'median_age', 'aged_65_older',
+       'aged_70_older', 'gdp_per_capita', 'extreme_poverty',
+       'diabetes_prevalence', 'female_smokers',
+       'male_smokers', 'hospital_beds_per_thousand',
+       'life_expectancy', 'human_development_index']].dropna()
+selected
+# %%
+cor = selected.corr()
+cor
+# %%
+pos1 = cor[cor["positive_rate"]>0.5]
+pos2 = cor[cor["positive_rate"]< -0.5]
+pos1
+# %%
+dth1 = cor[cor["cardiovasc_death_rate"]>0.5]
+dth2 = cor[cor["cardiovasc_death_rate"]< -0.5]
+dth2
+# %%
+nca1 = cor[cor["new_cases_smoothed_per_million"]>0.5]
+nca2 = cor[cor["new_cases_smoothed_per_million"]< -0.5]
+nca2
+# %%
+def newdata(dat1,dat2):
+  lst = list(dat1.index)
+  lst += list(dat2.index)
+  ndat = data[lst].dropna().reset_index()
+  ndat = ndat.drop(['index'],axis=1)
+  return ndat
+newdata(nca1,nca2)
+# %%
+newdata(dth1,dth2)
+# %%
+# model
+from sklearn.model_selection import train_test_split
+death = newdata(dth1,dth2)
+y = death.iloc[:,0]
+x = death.iloc[:,1:]
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state=2020)
+X_train
+# %%
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+
+clf1 = LinearRegression()
+clf1.fit(X_train,y_train)
+print(f'LinearRegression() train score:  {clf1.score(X_train,y_train):.3f}')
+print(f'LinearRegression() test score:  {clf1.score(X_test,y_test):.3f}')
+
+y_pred = clf1.predict(X_test)
+# The coefficients
+print('\nCoefficients: \n', clf1.coef_)
+# The mean squared error
+print('\nMean squared error: %.3f'
+      % mean_squared_error(y_test, y_pred))
+# The coefficient of determination: 1 is perfect prediction
+print('\nCoefficient of determination: %.3f'
+      % r2_score(y_test, y_pred))
+
+# %%
+clf2 = RandomForestRegressor(max_depth=7)
+clf2.fit(X_train,y_train)
+print(f'RandomForestRegressor() train score:  {clf2.score(X_train,y_train):.3f}')
+print(f'RandomForestRegressor() test score:  {clf2.score(X_test,y_test):.3f}')
+# %%
+from sklearn.tree import export_graphviz
+from IPython.display import Image 
+import pydotplus
+
+os.environ['PATH'] = os.environ['PATH']+';'+os.environ['CONDA_PREFIX']+r"/Library/bin/graphviz"
+tree = export_graphviz(clf2.estimators_[0], out_file=None)
+graph = pydotplus.graph_from_dot_data(tree) 
+Image(graph.create_png())

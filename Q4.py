@@ -3,8 +3,7 @@
 # # Q4
 # Whether death rate is influenced by aging degree? 
 # For different countries, does bigger share of older people mean bigger death rate?
-# For what age levels, they have the most confirmed cases, as well as deaths?
-# Is that for specific continent, country, or for most of the world?
+
 #%%
 import os
 import numpy as np
